@@ -1,0 +1,17 @@
+{
+  "name": "每日打卡",
+  "short_name": "打卡",
+  "description": "日历任务打卡 — 每天多任务，全部完成才算打卡成功",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
