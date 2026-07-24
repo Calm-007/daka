@@ -1126,6 +1126,18 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
+// PWA install debug
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('PWA: install prompt available');
+});
+window.addEventListener('appinstalled', () => {
+  console.log('PWA: installed successfully');
+  deferredPrompt = null;
+});
+
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft' && e.ctrlKey) {
     viewMode === 'week' ? navWeek(-1) : navMonth(-1);
