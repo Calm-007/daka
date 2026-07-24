@@ -1,4 +1,4 @@
-const CACHE = 'checkin-v2';
+const CACHE = 'checkin-v3';
 const ASSETS = [
   './index.html',
   './manifest.json',
