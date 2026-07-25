@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>每日打卡</title>
-<link rel="manifest" href="./manifest.json?v=3">
+<link rel="manifest" href="./manifest.json?v=4">
 <meta name="theme-color" content="#4f46e5">
 <style>
 /* ========================================
@@ -349,15 +349,36 @@
   .plan-add-task button:hover { filter:brightness(1.1); }
 
 /* ========================================
-   Responsive
+   Responsive — Mobile
    ======================================== */
   @media (max-width:768px) {
-    header { padding:10px 14px; gap:8px; }
-    header h1 { font-size:15px; }
+    header { padding:8px 10px; gap:6px; flex-wrap:wrap; }
+    header h1 { font-size:14px; }
+    header h1 svg { width:18px; height:18px; }
+    .view-toggle button { padding:4px 10px; font-size:11px; }
+    .plan-btn { padding:4px 10px; font-size:11px; }
+    .bell-btn { width:28px; height:28px; font-size:13px; }
     main { flex-direction:column; }
-    .cal-panel { width:100%; min-width:100%; border-right:none; border-bottom:1px solid var(--line); padding:14px; }
-    .task-panel { padding:14px; }
-    .modal { width:95vw; }
+    .cal-panel { width:100%; min-width:100%; border-right:none; border-bottom:2px solid var(--pri-light); padding:8px 4px; gap:6px; }
+    .nav-row { font-size:14px; gap:12px; }
+    .day-cell { font-size:12px; border-radius:6px; }
+    .day-cell .dot { width:3px; height:3px; bottom:2px; }
+    .weekdays { font-size:10px; padding:0 2px; }
+    .task-panel { padding:14px 10px; }
+    .task-header .date-title { font-size:17px; }
+    .task-item { padding:10px 12px; gap:8px; }
+    .task-name { font-size:14px; }
+    .add-task-form { flex-wrap:wrap; padding:10px 12px; }
+    .add-task-form input[type="text"] { font-size:14px; min-width:100%; }
+    .add-task-form input[type="time"] { width:auto; flex:1; }
+    .week-day-tasks .wt { font-size:10px; max-width:100px; padding:1px 6px; }
+    .week-day-label { width:42px; min-width:42px; font-size:10px; }
+    .week-day-label .wd { font-size:13px; }
+    .modal { width:98vw; }
+    .modal-body { padding:12px; }
+    .plan-row { flex-direction:column; gap:6px; padding:8px; }
+    .plan-row-label { width:auto; text-align:left; padding-top:0; }
+    .plan-add-task input[type="text"] { min-width:0; }
   }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -430,15 +451,28 @@ async function initDB() {
     const { data } = await sb.from('checkin_data').select('data, updated_at').eq('id', 1).single();
     if (data?.data) {
       const cloud = data.data;
-      // 合并策略：云端优先。如果本地有更新的数据（离线时编辑的），合并之
       const localTime = localStorage.getItem('checkin_last_sync');
       const cloudTime = data.updated_at;
-      if (localTime && cloudTime && new Date(localTime) > new Date(cloudTime)) {
+
+      // 判断云端是否有实际内容
+      const cloudEmpty = !hasContent(cloud);
+      const localHas = local && hasContent(local);
+
+      if (cloudEmpty && localHas) {
+        // 云端是空的，本地有数据 → 上传本地到云端
+        _db = local;
+        await saveToCloud(local);
+      } else if (localTime && cloudTime && new Date(localTime) > new Date(cloudTime)) {
         // 本地更新 → 合并本地数据
         _db = { ...cloud, ...local };
         await saveToCloud(_db);
       } else {
         _db = cloud;
+      }
+      // 备份旧数据防丢失
+      const oldLocal = localStorage.getItem(STORE);
+      if (oldLocal && hasContent(JSON.parse(oldLocal)) && !hasContent(_db)) {
+        _db = JSON.parse(oldLocal);
       }
       localStorage.setItem(STORE, JSON.stringify(_db));
       localStorage.setItem('checkin_last_sync', new Date().toISOString());
@@ -454,6 +488,13 @@ async function initDB() {
   updateSyncStatus(_db === local ? 'local' : 'empty');
   // 后台尝试上传本地数据
   if (local) saveToCloud(local).catch(() => {});
+}
+
+function hasContent(db) {
+  if (!db) return false;
+  const tasks = db.tasks || {};
+  const plan = db.plan || {};
+  return Object.keys(tasks).length > 0 || Object.keys(plan).length > 0;
 }
 
 async function saveToCloud(db) {
@@ -1100,6 +1141,12 @@ function render() {
     renderMonthView();
   }
   renderTaskPanel();
+  // 手机端自动滚动到任务区
+  if (window.innerWidth <= 768) {
+    setTimeout(() => {
+      document.getElementById('taskPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
 }
 
 // ============================================================

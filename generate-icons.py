@@ -26,7 +26,7 @@ def draw_icon(size):
     """Draw indigo circle + white checkmark"""
     cx = size / 2.0
     cy = size / 2.0
-    radius = size * 0.44
+    radius = size * 0.46  # bigger circle
 
     pixels = []
     for y in range(size):
