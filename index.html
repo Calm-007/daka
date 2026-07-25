@@ -950,10 +950,9 @@ function closePlanModal() {
 
 function renderPlanModal() {
   const plan = getPlan();
-  console.log('Plan modal rendering, plan:', plan);
   const wdNames = ['周日','周一','周二','周三','周四','周五','周六'];
   const body = document.getElementById('planModalBody');
-  let html = '<div style="text-align:center;color:var(--sub);font-size:11px;margin-bottom:8px">v5</div>';
+  let html = '';
 
   // ---- 每日固定任务 ----
   const dailyTasks = plan['_daily'] || [];
